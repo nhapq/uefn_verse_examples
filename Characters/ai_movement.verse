@@ -52,7 +52,6 @@ enemy_ai := class(creative_device):
                         State = "Idle" or State = "Chase"
                     then:
                         set State = "Chase"
-                        RotateTowardPlayer(Player)
                         FollowPlayer(Player)
                     else:
                         set State = "Return"
@@ -78,14 +77,19 @@ enemy_ai := class(creative_device):
     FollowPlayer(Player: player)<suspends>:void=
         # to avoid weird behavior when this prop is too close to the player
         MinDistanceToPlayer := 1.0
+        # increase this value to make the prop move smoother
+        Smoothness := 4.0
 
         if ( Fort := Player.GetFortCharacter[], ThisProp.IsValid[]):
             PlayerTran := Fort.GetTransform()
             PropTran := ThisProp.GetTransform()
             DistanceToPlayer := Distance(PlayerTran.Translation, PropTran.Translation)
+            LerpedLocation := PropTran.Translation + (PlayerTran.Translation - PropTran.Translation)/Smoothness
+
             if (DistanceToPlayer > MinDistanceToPlayer):
                 NewRotation := CalculateRotation(Player)
-                ThisProp.MoveTo(vector3{X:=PlayerTran.Translation.X, Y:=PlayerTran.Translation.Y, Z:=0.0}, NewRotation, (DistanceToPlayer / MovingSpeed))
+                ThisProp.MoveTo(vector3{X:=LerpedLocation.X,
+                     Y:=LerpedLocation.Y, Z:=0.0}, NewRotation, (Distance(LerpedLocation, PropTran.Translation) / MovingSpeed))
             
 
     RotateTowardPlayer(Player: player)<suspends>:void=
