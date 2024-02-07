@@ -13,21 +13,20 @@ using { /UnrealEngine.com/Temporary/Diagnostics }
 using { /UnrealEngine.com/Temporary/SpatialMath }
 
 
-ai_movement := class(creative_device):
+enemy_ai := class(creative_device):
 
-    # Link this with your Prop prop
+    # Link this with your prop
     @editable ThisProp : creative_prop = creative_prop{}
 
     # Change this value to control the speed of the Prop
-    var MovingSpeed : float = 200.0
+    MovingSpeed : float = 200.0
 
     # Prop will detect players within this range
-    var DetectionRange : float = 2000.0
-
-    # 
-    var State : string = "Idle"
+    DetectionRange : float = 2000.0
 
     MaxDistanceFromSpawnLocation : float = 3000.0
+
+    var State : string = "Idle"
 
     var SpawnLocation : vector3 = vector3{}
     var SpawnRotation : rotation = rotation{}
@@ -52,7 +51,6 @@ ai_movement := class(creative_device):
                         Distance(SpawnLocation, ThisProp.GetTransform().Translation) < MaxDistanceFromSpawnLocation
                         State = "Idle" or State = "Chase"
                     then:
-                        Print("Distance to player: { DistanceToPlayer}")
                         set State = "Chase"
                         RotateTowardPlayer(Player)
                         FollowPlayer(Player)
@@ -73,18 +71,19 @@ ai_movement := class(creative_device):
 
             ThisProp.MoveTo(SpawnLocation, ThisProp.GetTransform().Rotation, (Distance(SpawnLocation, PropLocation) / MovingSpeed))
             ThisProp.MoveTo(SpawnLocation, SpawnRotation, 1.0)
+
             set State = "Idle"
 
 
     FollowPlayer(Player: player)<suspends>:void=
         # to avoid weird behavior when this prop is too close to the player
-        MinimumDistance := 1.0
+        MinDistanceToPlayer := 1.0
 
         if ( Fort := Player.GetFortCharacter[], ThisProp.IsValid[]):
             PlayerTran := Fort.GetTransform()
             PropTran := ThisProp.GetTransform()
             DistanceToPlayer := Distance(PlayerTran.Translation, PropTran.Translation)
-            if (DistanceToPlayer > MinimumDistance):
+            if (DistanceToPlayer > MinDistanceToPlayer):
                 NewRotation := CalculateRotation(Player)
                 ThisProp.MoveTo(vector3{X:=PlayerTran.Translation.X, Y:=PlayerTran.Translation.Y, Z:=0.0}, NewRotation, (DistanceToPlayer / MovingSpeed))
             
